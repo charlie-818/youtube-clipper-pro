@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://unpkg.com">
+  <title>YouTube Clipper Pro</title>
+  
+  <!-- Load React from CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/styled-components/dist/styled-components.min.js"></script>
+  <script src="https://unpkg.com/@fortawesome/fontawesome-svg-core"></script>
+  <script src="https://unpkg.com/@fortawesome/free-solid-svg-icons"></script>
+  <script src="https://unpkg.com/@fortawesome/react-fontawesome"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background-color: #252525;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    h2 {
+      margin-top: 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #3a3a3a;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      height: 100px;
+      justify-content: center;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    button:hover {
+      background-color: #357ab8;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+    }
+    .feature-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .feature-title {
+      font-weight: 500;
+    }
+    pre {
+      background-color: #333;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: rgba(76, 217, 100, 0.2);
+      border: 1px solid rgba(76, 217, 100, 0.5);
+    }
+    .error {
+      background-color: rgba(255, 107, 107, 0.2);
+      border: 1px solid rgba(255, 107, 107, 0.5);
+    }
+    
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background-color: #252525;
+      border-radius: 8px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 15px;
+    }
+    .modal-title {
+      margin: 0;
+      font-size: 18px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 5px;
+      height: auto;
+    }
+    .modal-body {
+      margin-bottom: 20px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .modal-button {
+      height: auto;
+      padding: 8px 16px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 4px;
+      background-color: #333;
+      border: 1px solid #444;
+      color: #fff;
+      font-size: 14px;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #4a90e2;
+    }
+    
+    /* Subtitle styles */
+    .subtitle-container {
+      position: absolute;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      text-align: center;
+      display: none;
+      pointer-events: none;
+      transition: opacity 0.3s ease-in-out;
+      z-index: 10;
+    }
+    
+    .subtitle-text {
+      background-color: transparent;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      display: inline-block;
+      max-width: 90%;
+      font-weight: 500;
+      text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000, 0px 1px 0 #000, 0px -1px 0 #000, -1px 0px 0 #000, 1px 0px 0 #000;
+      transition: all 0.2s ease-in-out;
+      font-size: 15px;
+      letter-spacing: 0.3px;
+    }
+    
+    /* Social media style subtitles */
+    .subtitle-social {
+      background-color: transparent;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 #3F85FF, -1px 1px 0 #3F85FF, 1px -1px 0 #3F85FF, -1px -1px 0 #3F85FF, 0px 1px 0 #3F85FF, 0px -1px 0 #3F85FF, -1px 0px 0 #3F85FF, 1px 0px 0 #3F85FF;
+      letter-spacing: 0.5px;
+      padding: 6px 10px;
+      border-left: 4px solid #4a90e2;
+      transition: all 0.2s ease-in-out;
+      position: relative;
+    }
+    
+    .subtitle-social::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.7), transparent);
+    }
+    
+    /* Caption style subtitles */
+    .subtitle-caption {
+      background-color: transparent;
+      color: white;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.6);
+      transition: all 0.2s ease-in-out;
+      font-size: 15px;
+    }
+    
+    /* Simple style subtitles */
+    .subtitle-simple {
+      background-color: transparent;
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 5px rgba(0,0,0,1), 0 0 3px rgba(0,0,0,1);
+      transition: all 0.2s ease-in-out;
+    }
+    
+    /* Modern style subtitles */
+    .subtitle-modern {
+      background-color: transparent;
+      color: white;
+      font-weight: 500;
+      font-size: 15px;
+      padding: 6px 12px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.7), 1px 1px 0 #2C5FFE, -1px 1px 0 #2C5FFE;
+      letter-spacing: 0.3px;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    /* Elegant style subtitles */
+    .subtitle-elegant {
+      background-color: transparent;
+      color: #fafafa;
+      font-weight: 500;
+      font-size: 15px;
+      font-style: italic;
+      padding: 8px 16px;
+      letter-spacing: 0.5px;
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.8), 0 0 3px rgba(0,0,0,0.6);
+      transition: all 0.2s ease-in-out;
+    }
+    
+    /* Subtitle style controls */
+    .subtitle-style-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .style-button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .style-button:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .style-button.active {
+      background-color: #4a90e2;
+      color: white;
+      border-color: #3a80d2;
+    }
+    
+    .style-selection {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin: 15px 0;
+    }
+    
+    .style-selection label {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .style-selection label:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .style-selection input {
+      margin-right: 8px;
+    }
+    
+    .style-preview {
+      margin-top: 15px;
+      padding: 12px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .style-preview #style-preview-container {
+      padding: 10px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 4px;
+    }
+    
+    .style-preview #style-preview-container span {
+      color: white;
+      font-size: 14px;
+    }
+    
+    .subtitle-style-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .default-style span {
+      background-color: transparent;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000, 0px 1px 0 #000, 0px -1px 0 #000, -1px 0px 0 #000, 1px 0px 0 #000;
+    }
+    
+    .social-style span {
+      background-color: transparent;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 #3F85FF, -1px 1px 0 #3F85FF, 1px -1px 0 #3F85FF, -1px -1px 0 #3F85FF, 0px 1px 0 #3F85FF, 0px -1px 0 #3F85FF, -1px 0px 0 #3F85FF, 1px 0px 0 #3F85FF;
+      letter-spacing: 0.5px;
+      padding: 6px 10px;
+      border-left: 4px solid #4a90e2;
+      position: relative;
+    }
+    
+    .caption-style span {
+      background-color: transparent;
+      color: white;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.6);
+      font-size: 14px;
+    }
+    
+    .simple-style span {
+      background-color: transparent;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 5px rgba(0,0,0,1), 0 0 3px rgba(0,0,0,1);
+    }
+    
+    .modern-style span {
+      background-color: transparent;
+      color: white;
+      font-weight: 500;
+      font-size: 14px;
+      padding: 6px 12px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.7), 1px 1px 0 #2C5FFE, -1px 1px 0 #2C5FFE;
+      letter-spacing: 0.3px;
+    }
+    
+    .elegant-style span {
+      background-color: transparent;
+      color: #fafafa;
+      font-weight: 500;
+      font-size: 14px;
+      font-style: italic;
+      padding: 8px 16px;
+      letter-spacing: 0.5px;
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.8), 0 0 3px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>YouTube Clipper Pro</h1>
+    <p>Welcome to YouTube Clipper Pro. This is a simplified interface to access the application features.</p>
+    
+    <div id="api-status" class="status">Checking API availability...</div>
+    
+    <div class="section">
+      <div class="card">
+        <h2>Projects</h2>
+        <div class="button-grid">
+          <button id="btn-create-project">
+            <span class="feature-icon">＋</span>
+            <span class="feature-title">Create New Project</span>
+          </button>
+          <button id="btn-list-projects">
+            <span class="feature-icon">📋</span>
+            <span class="feature-title">List Projects</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="card">
+        <h2>YouTube Features</h2>
+        <div class="button-grid">
+          <button id="btn-youtube-import">
+            <span class="feature-icon">📥</span>
+            <span class="feature-title">Import YouTube Video</span>
+          </button>
+          <button id="btn-extract-audio">
+            <span class="feature-icon">🔊</span>
+            <span class="feature-title">Extract Audio</span>
+          </button>
+          <button id="btn-subtitles">
+            <span class="feature-icon">💬</span>
+            <span class="feature-title">Generate Subtitles</span>
+          </button>
+          <button id="btn-vertical-video">
+            <span class="feature-icon">📱</span>
+            <span class="feature-title">Convert to Vertical</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="card">
+        <h2>Settings</h2>
+        <div class="button-grid">
+          <button id="btn-preferences">
+            <span class="feature-icon">⚙️</span>
+            <span class="feature-title">View Preferences</span>
+          </button>
+          <button id="btn-theme-toggle">
+            <span class="feature-icon">🌓</span>
+            <span class="feature-title">Toggle Theme</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Result</h2>
+      <pre id="result">No action performed yet</pre>
+    </div>
+    
+    <!-- Video Player -->
+    <div id="video-player-container" class="card" style="display: none; margin-top: 20px;">
+      <h2>Video Player</h2>
+      <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+        <div style="position: relative; width: 270px; height: 480px; background-color: #000; display: flex; justify-content: center; align-items: center; border-radius: 8px; overflow: hidden;">
+          <video id="video-player" style="max-width: 100%; max-height: 100%;" controls>
+            Your browser does not support the video tag.
+          </video>
+          <!-- Subtitle overlay container -->
+          <div id="subtitle-overlay" class="subtitle-container">
+            <div id="subtitle-text" class="subtitle-text"></div>
+          </div>
+        </div>
+        <div style="margin-top: 15px; width: 270px; display: flex; justify-content: space-between;">
+          <button id="btn-view-original" class="modal-button">Original</button>
+          <button id="btn-view-vertical" class="modal-button">Vertical</button>
+          <button id="btn-toggle-subtitles" class="modal-button">Subtitles: Off</button>
+          <button id="btn-download-with-subtitles" class="modal-button">Download Vertical with Subtitles</button>
+        </div>
+        <!-- Subtitle style controls -->
+        <div id="subtitle-style-controls" class="subtitle-style-controls" style="display: none;">
+          <button class="modal-button style-button" data-style="default">Default</button>
+          <button class="modal-button style-button" data-style="social">Social</button>
+          <button class="modal-button style-button" data-style="caption">Caption</button>
+          <button class="modal-button style-button" data-style="simple">Simple</button>
+          <button class="modal-button style-button" data-style="modern">Modern</button>
+          <button class="modal-button style-button" data-style="elegant">Elegant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Templates -->
+  <div id="modal-container"></div>
+  
+  <template id="youtube-import-modal">
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Import YouTube Video</h3>
+          <button class="modal-close" data-action="close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="youtube-url">YouTube URL</label>
+            <input type="text" id="youtube-url" class="form-input" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Download Options</label>
+            <div style="display: flex; gap: 10px;">
+              <label style="flex: 1; display: flex; align-items: center;">
+                <input type="checkbox" id="download-video" checked style="margin-right: 5px;"> 
+                Download Video
+              </label>
+              <label style="flex: 1; display: flex; align-items: center;">
+                <input type="checkbox" id="download-audio" checked style="margin-right: 5px;"> 
+                Extract Audio
+              </label>
+              <label style="flex: 1; display: flex; align-items: center;">
+                <input type="checkbox" id="download-subtitles" checked style="margin-right: 5px;"> 
+                Get Subtitles
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display: flex; align-items: center;">
+              <input type="checkbox" id="auto-vertical" checked style="margin-right: 5px;"> 
+              Automatically convert to vertical format
+            </label>
+          </div>
+          <div id="download-status" style="display: none; margin-top: 15px;">
+            <div style="margin-bottom: 10px; font-weight: 500;" id="download-message">Preparing download...</div>
+            <div style="height: 6px; background-color: #333; border-radius: 3px; overflow: hidden;">
+              <div id="download-progress" style="height: 100%; width: 0%; background-color: #4a90e2; transition: width 0.3s;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-button" data-action="cancel">Cancel</button>
+          <button class="modal-button" data-action="confirm">Import Video</button>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <template id="create-project-modal">
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Create New Project</h3>
+          <button class="modal-close" data-action="close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="project-name">Project Name</label>
+            <input type="text" id="project-name" class="form-input" placeholder="Enter project name" value="Untitled Project">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-button" data-action="cancel">Cancel</button>
+          <button class="modal-button" data-action="confirm">Create Project</button>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <template id="video-convert-modal">
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Convert to Vertical Format</h3>
+          <button class="modal-close" data-action="close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Select a video:</label>
+            <select id="video-select" class="form-input"></select>
+          </div>
+          <div id="processing-status" style="display: none; margin-top: 15px;">
+            <div style="margin-bottom: 10px; font-weight: 500;" id="processing-message">Preparing to process video...</div>
+            <div style="height: 6px; background-color: #333; border-radius: 3px; overflow: hidden;">
+              <div id="processing-progress" style="height: 100%; width: 0%; background-color: #4a90e2; transition: width 0.3s;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-button" data-action="cancel">Cancel</button>
+          <button class="modal-button" data-action="confirm">Convert</button>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const apiStatus = document.getElementById('api-status');
+      const result = document.getElementById('result');
+      const modalContainer = document.getElementById('modal-container');
+      const videoPlayerContainer = document.getElementById('video-player-container');
+      const videoPlayer = document.getElementById('video-player');
+      
+      // Current video paths for player
+      let currentVideoData = {
+        originalPath: null,
+        verticalPath: null,
+        subtitlesPath: null
+      };
+      
+      // Subtitle display variables
+      let subtitles = [];
+      let currentSubtitleIndex = -1;
+      let subtitlesEnabled = false;
+      let currentSubtitleStyle = 'default';
+      const subtitleOverlay = document.getElementById('subtitle-overlay');
+      const subtitleText = document.getElementById('subtitle-text');
+      const toggleSubtitlesBtn = document.getElementById('btn-toggle-subtitles');
+      const subtitleStyleControls = document.getElementById('subtitle-style-controls');
+      
+      // Function to load and parse subtitles
+      async function loadSubtitles(path) {
+        if (!path) return [];
+        
+        try {
+          // Use the API to get subtitles via IPC
+          const projectsWithVideo = await window.api.getProjects();
+          const matchingProject = projectsWithVideo.find(p => 
+            p.videoSource && (p.videoSource.path === currentVideoData.originalPath || p.videoSource.path === currentVideoData.verticalPath)
+          );
+          
+          if (matchingProject && matchingProject.subtitlesSource && matchingProject.subtitlesSource.path) {
+            path = matchingProject.subtitlesSource.path;
+          } else if (!path.endsWith('.vtt')) {
+            // Try to find a related subtitles file
+            const basePath = path.substring(0, path.lastIndexOf('.'));
+            const potentialSubtitlePath = basePath + '.vtt';
+            path = potentialSubtitlePath;
+          }
+          
+          currentVideoData.subtitlesPath = path;
+          
+          // If no subtitles exist yet, try to generate them
+          if (!currentVideoData.subtitlesPath || !await fileExists(currentVideoData.subtitlesPath)) {
+            console.log('No subtitles found, generating...');
+            const videoPath = currentVideoData.originalPath || currentVideoData.verticalPath;
+            if (videoPath) {
+              try {
+                await window.api.generateSubtitles(videoPath);
+                // The API should have created a subtitles file with the same name as the video
+                const basePath = videoPath.substring(0, videoPath.lastIndexOf('.'));
+                currentVideoData.subtitlesPath = basePath + '.vtt';
+              } catch (e) {
+                console.error('Failed to generate subtitles:', e);
+                return [];
+              }
+            }
+          }
+          
+          if (!currentVideoData.subtitlesPath) return [];
+          
+          // Verify the file exists
+          if (!await fileExists(currentVideoData.subtitlesPath)) {
+            console.error('Subtitle file not found:', currentVideoData.subtitlesPath);
+            return [];
+          }
+          
+          // Read the subtitle file
+          const content = await window.api.readTextFile(currentVideoData.subtitlesPath);
+          if (!content) {
+            console.error('Empty subtitle file');
+            return [];
+          }
+          
+          // Parse the VTT content
+          return parseVTT(content);
+        } catch (error) {
+          console.error('Error loading subtitles:', error);
+          return [];
+        }
+      }
+      
+      // Helper function to check if a file exists
+      async function fileExists(path) {
+        try {
+          const result = await window.api.fileExists(path);
+          return result;
+        } catch (e) {
+          return false;
+        }
+      }
+      
+      // Function to parse VTT content
+      function parseVTT(vttContent) {
+        const lines = vttContent.split('\n');
+        const subtitles = [];
+        
+        let currentSubtitle = null;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          
+          if (line === 'WEBVTT' || line === '') {
+            continue;
+          }
+          
+          // Check if this line contains a timestamp
+          if (line.includes('-->')) {
+            const times = line.split('-->').map(t => t.trim());
+            
+            currentSubtitle = {
+              id: subtitles.length.toString(),
+              startTime: timeToSeconds(times[0]),
+              endTime: timeToSeconds(times[1]),
+              text: ''
+            };
+            
+            // Look ahead to get the subtitle text
+            let j = i + 1;
+            while (j < lines.length && lines[j].trim() !== '') {
+              if (currentSubtitle.text) {
+                currentSubtitle.text += ' ';
+              }
+              currentSubtitle.text += lines[j].trim();
+              j++;
+            }
+            
+            // Remove any timestamp patterns from the text
+            currentSubtitle.text = removeTimestamps(currentSubtitle.text);
+            
+            subtitles.push(currentSubtitle);
+            i = j - 1; // Skip ahead to the blank line
+          }
+        }
+        
+        return subtitles;
+      }
+      
+      // Function to remove timestamp patterns from subtitle text
+      function removeTimestamps(text) {
+        // Remove common timestamp patterns:
+        // [MM:SS] or [M:SS] format
+        text = text.replace(/\[\d+:\d+\]/g, '');
+        
+        // [MM:SS-MM:SS] format
+        text = text.replace(/\[\d+:\d+-\d+:\d+\]/g, '');
+        
+        // (MM:SS) format
+        text = text.replace(/\(\d+:\d+\)/g, '');
+        
+        // HH:MM:SS format
+        text = text.replace(/\d{1,2}:\d{2}:\d{2}/g, '');
+        
+        // Remove any extra spaces that might have been left
+        text = text.replace(/\s+/g, ' ').trim();
+        
+        return text;
+      }
+      
+      // Function to convert VTT timestamp to seconds
+      function timeToSeconds(timeString) {
+        // Handle both HH:MM:SS.mmm and MM:SS.mmm formats
+        const parts = timeString.split(':');
+        if (parts.length === 3) {
+          return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
+        }
+        if (parts.length === 2) {
+          return parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+        }
+        return parseFloat(timeString);
+      }
+      
+      // Function to update subtitle display
+      function updateSubtitle(currentTime) {
+        if (!subtitlesEnabled || subtitles.length === 0) {
+          subtitleOverlay.style.display = 'none';
+          return;
+        }
+        
+        // Find the current subtitle
+        let foundSubtitle = false;
+        let newSubtitleText = '';
+        let newSubtitleIndex = -1;
+        
+        for (let i = 0; i < subtitles.length; i++) {
+          const subtitle = subtitles[i];
+          if (currentTime >= subtitle.startTime && currentTime <= subtitle.endTime) {
+            newSubtitleText = subtitle.text;
+            newSubtitleIndex = i;
+            foundSubtitle = true;
+            break;
+          }
+        }
+        
+        // Prepare text before showing/hiding to ensure seamless transition
+        if (foundSubtitle) {
+          // Only update the DOM if the subtitle text has changed
+          if (newSubtitleIndex !== currentSubtitleIndex) {
+            // Use smooth transition for text change
+            if (subtitleOverlay.style.display === 'block') {
+              // If already showing a subtitle, use opacity transition
+              subtitleOverlay.style.opacity = '0';
+              
+              // Wait for fade out before changing text
+              setTimeout(() => {
+                subtitleText.textContent = newSubtitleText;
+                subtitleOverlay.style.opacity = '1';
+              }, 150);
+            } else {
+              // First subtitle - just show it
+              subtitleText.textContent = newSubtitleText;
+              subtitleOverlay.style.display = 'block';
+              subtitleOverlay.style.opacity = '1';
+            }
+            
+            currentSubtitleIndex = newSubtitleIndex;
+          }
+        } else if (subtitleOverlay.style.display === 'block') {
+          // Only hide if currently visible
+          subtitleOverlay.style.opacity = '0';
+          
+          // Wait for fade out before hiding completely
+          setTimeout(() => {
+            if (currentSubtitleIndex === -1) { // Still no subtitle
+              subtitleOverlay.style.display = 'none';
+            }
+          }, 200);
+          
+          currentSubtitleIndex = -1;
+        }
+      }
+      
+      // Function to show video player with a specific source
+      async function showVideoPlayer(videoPath) {
+        if (!videoPath) return;
+        
+        videoPlayer.src = `file://${videoPath}`;
+        videoPlayerContainer.style.display = 'block';
+        
+        // Wait for the video to load
+        await new Promise(resolve => {
+          videoPlayer.onloadedmetadata = resolve;
+          videoPlayer.load();
+        });
+        
+        // Load subtitles
+        subtitles = await loadSubtitles(videoPath);
+        console.log(`Loaded ${subtitles.length} subtitles`);
+        
+        // Setup subtitle tracking
+        videoPlayer.ontimeupdate = () => updateSubtitle(videoPlayer.currentTime);
+        
+        // Play video
+        videoPlayer.play().catch(err => console.error('Error playing video:', err));
+        
+        // Scroll to video player
+        videoPlayerContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      // Toggle subtitles function
+      function toggleSubtitles() {
+        subtitlesEnabled = !subtitlesEnabled;
+        toggleSubtitlesBtn.textContent = `Subtitles: ${subtitlesEnabled ? 'On' : 'Off'}`;
+        
+        // Show/hide style controls
+        subtitleStyleControls.style.display = subtitlesEnabled ? 'flex' : 'none';
+        
+        if (subtitlesEnabled) {
+          // Update immediately
+          updateSubtitle(videoPlayer.currentTime);
+        } else {
+          subtitleOverlay.style.display = 'none';
+        }
+      }
+      
+      // Function to change subtitle style
+      function changeSubtitleStyle(style) {
+        currentSubtitleStyle = style;
+        
+        // Remove all style classes
+        subtitleText.classList.remove('subtitle-text', 'subtitle-social', 'subtitle-caption', 'subtitle-simple', 'subtitle-modern', 'subtitle-elegant');
+        
+        // Add appropriate class
+        switch(style) {
+          case 'social':
+            subtitleText.classList.add('subtitle-social');
+            break;
+          case 'caption':
+            subtitleText.classList.add('subtitle-caption');
+            break;
+          case 'simple':
+            subtitleText.classList.add('subtitle-simple');
+            break;
+          case 'modern':
+            subtitleText.classList.add('subtitle-modern');
+            break;
+          case 'elegant':
+            subtitleText.classList.add('subtitle-elegant');
+            break;
+          default:
+            subtitleText.classList.add('subtitle-text');
+        }
+        
+        // Highlight active button
+        document.querySelectorAll('.style-button').forEach(btn => {
+          if (btn.dataset.style === style) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        
+        // Update current subtitle if subtitles are enabled
+        if (subtitlesEnabled && currentSubtitleIndex >= 0) {
+          updateSubtitle(videoPlayer.currentTime);
+        }
+      }
+      
+      // Check API availability
+      if (window.api) {
+        const methods = Object.keys(window.api).join(', ');
+        apiStatus.textContent = `✅ API is available with methods: ${methods}`;
+        apiStatus.classList.add('success');
+        
+        // Set up button handlers
+        setupButtonHandlers();
+      } else {
+        apiStatus.textContent = '❌ API is not available. The Electron preload script is not working correctly.';
+        apiStatus.classList.add('error');
+      }
+      
+      // Helper function to show a modal
+      function showModal(templateId) {
+        return new Promise((resolve, reject) => {
+          const template = document.getElementById(templateId);
+          const modalClone = template.content.cloneNode(true);
+          
+          modalContainer.appendChild(modalClone);
+          
+          // Set up event handlers
+          const closeBtn = modalContainer.querySelector('[data-action="close"]');
+          const cancelBtn = modalContainer.querySelector('[data-action="cancel"]');
+          const confirmBtn = modalContainer.querySelector('[data-action="confirm"]');
+          
+          function closeModal() {
+            modalContainer.innerHTML = '';
+            reject(new Error('Modal closed'));
+          }
+          
+          function confirmModal() {
+            const data = {};
+            
+            // Collect form data
+            // Text inputs
+            const textInputs = modalContainer.querySelectorAll('.form-input');
+            textInputs.forEach(input => {
+              data[input.id] = input.value;
+            });
+            
+            // Checkboxes
+            const checkboxes = modalContainer.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+              data[checkbox.id] = checkbox.checked;
+            });
+            
+            // Radios
+            const radios = modalContainer.querySelectorAll('input[type="radio"]:checked');
+            radios.forEach(radio => {
+              data[radio.name] = radio.value;
+            });
+            
+            modalContainer.innerHTML = '';
+            resolve(data);
+          }
+          
+          closeBtn.addEventListener('click', closeModal);
+          cancelBtn.addEventListener('click', closeModal);
+          confirmBtn.addEventListener('click', confirmModal);
+        });
+      }
+      
+      function setupButtonHandlers() {
+        // Projects
+        document.getElementById('btn-create-project').addEventListener('click', async () => {
+          try {
+            const data = await showModal('create-project-modal');
+            const projectName = data['project-name'];
+            
+            if (!projectName) {
+              result.textContent = 'Project creation cancelled - name is required';
+              return;
+            }
+            
+            const newProject = {
+              id: generateUUID(), // Ensure ID is set first
+              name: projectName,
+              resolution: '1080p',
+              createdAt: new Date().toISOString()
+            };
+            
+            console.log('Creating project with ID:', newProject.id);
+            const createdProject = await window.api.saveProject(newProject);
+            result.textContent = JSON.stringify(createdProject, null, 2);
+          } catch (error) {
+            if (error.message !== 'Modal closed') {
+              result.textContent = `Error: ${error.message}`;
+              console.error('Error creating project:', error);
+            }
+          }
+        });
+        
+        document.getElementById('btn-list-projects').addEventListener('click', async () => {
+          try {
+            const projects = await window.api.getProjects();
+            result.textContent = JSON.stringify(projects, null, 2);
+          } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+          }
+        });
+        
+        // YouTube features
+        document.getElementById('btn-youtube-import').addEventListener('click', async () => {
+          try {
+            let downloadModal, downloadModalPromise;
+            
+            // Function to update the download progress UI
+            function updateProgress(message, percent, isError = false) {
+              if (!downloadModal) return;
+              
+              const downloadStatus = downloadModal.querySelector('#download-status');
+              const downloadMessage = downloadModal.querySelector('#download-message');
+              const downloadProgress = downloadModal.querySelector('#download-progress');
+              
+              if (downloadStatus && downloadMessage && downloadProgress) {
+                downloadStatus.style.display = 'block';
+                downloadMessage.textContent = message;
+                downloadProgress.style.width = `${percent}%`;
+                
+                if (isError) {
+                  downloadProgress.style.backgroundColor = '#ff6b6b';
+                }
+              }
+            }
+            
+            // Show the modal
+            downloadModalPromise = showModal('youtube-import-modal');
+            downloadModal = document.querySelector('.modal-overlay');
+            
+            // Wait for user input from the modal
+            const data = await downloadModalPromise;
+            
+            // Get the form data
+            const url = data['youtube-url'];
+            const downloadVideo = data['download-video'] !== false;
+            const downloadAudio = data['download-audio'] !== false;
+            const downloadSubtitles = data['download-subtitles'] !== false;
+            const autoVertical = data['auto-vertical'] !== false;
+            
+            if (!url) {
+              result.textContent = 'Import cancelled - URL is required';
+              return;
+            }
+            
+            result.textContent = 'Downloading YouTube video... This may take a while depending on the video length.';
+            
+            // Start the download with progress updates
+            try {
+              updateProgress('Getting video information...', 10);
+              
+              const options = {
+                downloadVideo,
+                downloadAudio,
+                downloadSubtitles
+              };
+              
+              // Start the download
+              const videoData = await window.api.extractYouTubeVideo(url, options);
+              
+              // Check if there was an error but the download still returned some data
+              if (videoData.error) {
+                updateProgress(`Error: ${videoData.error}`, 100, true);
+                result.textContent = `Error downloading video: ${videoData.error}\n\n${JSON.stringify(videoData, null, 2)}`;
+                return;
+              }
+              
+              // Update progress based on what was downloaded
+              if (videoData.videoPath) {
+                updateProgress('Video downloaded successfully!', 100);
+                
+                // If auto-vertical is enabled, convert the video
+                if (autoVertical && videoData.videoPath) {
+                  updateProgress('Converting video to vertical format...', 100);
+                  
+                  try {
+                    const processResult = await window.api.processVideoVertical(videoData.videoPath);
+                    
+                    if (processResult.success) {
+                      videoData.verticalPath = processResult.verticalPath;
+                      updateProgress('Video converted to vertical format!', 100);
+                    } else {
+                      console.error('Error converting to vertical:', processResult.error);
+                    }
+                  } catch (error) {
+                    console.error('Error during vertical conversion:', error);
+                  }
+                }
+              } else if (videoData.audioPath) {
+                updateProgress('Audio extracted successfully!', 100);
+              } else {
+                updateProgress('Metadata retrieved successfully!', 100);
+              }
+              
+              result.textContent = 'Video processing completed!\n\n' + JSON.stringify(videoData, null, 2);
+              
+              // Add a button to add this video to a project
+              const addToProjectBtn = document.createElement('button');
+              addToProjectBtn.textContent = 'Add to Project';
+              addToProjectBtn.className = 'modal-button';
+              addToProjectBtn.style.marginTop = '20px';
+              addToProjectBtn.style.display = 'block';
+              addToProjectBtn.onclick = async () => {
+                try {
+                  // Get available projects
+                  const projects = await window.api.getProjects();
+                  
+                  if (projects.length === 0) {
+                    // No projects exist, create one
+                    await addVideoToNewProject(videoData);
+                  } else {
+                    // Show project selection modal
+                    showProjectSelectionModal(projects, videoData);
+                  }
+                } catch (error) {
+                  result.textContent = `Error adding video to project: ${error.message}`;
+                }
+              };
+              
+              // Append the button below the result
+              const resultDiv = document.getElementById('result');
+              resultDiv.parentNode.appendChild(addToProjectBtn);
+            } catch (error) {
+              updateProgress(`Error: ${error.message}`, 100, true);
+              result.textContent = `Error downloading video: ${error.message}`;
+            }
+          } catch (error) {
+            if (error.message !== 'Modal closed') {
+              result.textContent = `Error: ${error.message}`;
+            }
+          }
+        });
+        
+        // New function to add video to a new project
+        async function addVideoToNewProject(videoData) {
+          try {
+            // Show project creation modal
+            const projectData = await showModal('create-project-modal');
+            const projectName = projectData['project-name'];
+            
+            if (!projectName) {
+              result.textContent = 'Project creation cancelled - name is required';
+              return;
+            }
+            
+            // Create a new project with a valid ID
+            const newProject = {
+              id: generateUUID(), // Generate a UUID first and ensure it's a valid string
+              name: projectName,
+              resolution: '1080p',
+              createdAt: new Date().toISOString()
+            };
+            
+            console.log('Creating new project with ID:', newProject.id);
+            
+            // Save the project first
+            const createdProject = await window.api.saveProject(newProject);
+            console.log('Project saved, received project data:', createdProject);
+            
+            if (!createdProject || !createdProject.id) {
+              throw new Error('Failed to save project or project ID was not returned');
+            }
+            
+            // Then add the video to it using the returned project's ID
+            console.log('Adding video to project with ID:', createdProject.id);
+            const updatedProject = await window.api.addVideoToProject(createdProject.id, videoData);
+            
+            result.textContent = `Video added to new project: ${projectName}\n\n${JSON.stringify(updatedProject, null, 2)}`;
+            
+            // Show the video in the video player
+            if (videoData.videoPath) {
+              currentVideoData = {
+                originalPath: videoData.videoPath,
+                verticalPath: videoData.verticalPath || null
+              };
+              showVideoPlayer(videoData.verticalPath || videoData.videoPath);
+            }
+          } catch (error) {
+            result.textContent = `Error creating project: ${error.message}`;
+            console.error('Error in addVideoToNewProject:', error);
+          }
+        }
+        
+        // Generate a UUID for new projects
+        function generateUUID() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        }
+        
+        // Show project selection modal
+        function showProjectSelectionModal(projects, videoData) {
+          // Log projects for debugging
+          console.log('Projects available:', projects);
+          
+          if (!projects || projects.length === 0) {
+            result.textContent = 'No projects available. Creating a new one...';
+            return addVideoToNewProject(videoData);
+          }
+          
+          // Create modal container if it doesn't exist
+          let modalContainer = document.getElementById('modal-container');
+          if (!modalContainer) {
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'modal-container';
+            document.body.appendChild(modalContainer);
+          }
+          
+          // Display project IDs for debugging
+          const projectDebugInfo = projects.map(p => 
+            `Project: ${p.name}, ID: ${p.id || 'undefined'}`
+          ).join('\n');
+          console.log('Project debug info:\n' + projectDebugInfo);
+          
+          // Create modal content - with stringified project IDs
+          const modalHTML = `
+            <div class="modal-overlay">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h3 class="modal-title">Select Project</h3>
+                  <button class="modal-close" data-action="close">✕</button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label class="form-label">Debug Info:</label>
+                    <pre style="font-size: 10px; max-height: 100px; overflow: auto; margin-bottom: 10px;">${projectDebugInfo}</pre>
+                    
+                    <label class="form-label">Choose a project:</label>
+                    <select id="project-select" class="form-input">
+                      ${projects.map(p => {
+                        // Ensure we have a valid ID and stringify it
+                        const id = p.id ? String(p.id).trim() : '';
+                        return `<option value="${id}" ${!id ? 'disabled' : ''}>${p.name} ${!id ? '(invalid ID)' : ''}</option>`;
+                      }).join('')}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Or</label>
+                    <button id="create-new-project" class="modal-button" style="height: auto; padding: 8px 16px; width: 100%;">
+                      Create New Project
+                    </button>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button class="modal-button" data-action="cancel">Cancel</button>
+                  <button class="modal-button" data-action="confirm">Add to Project</button>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Add modal to DOM
+          modalContainer.innerHTML = modalHTML;
+          
+          // Set up event handlers
+          const closeBtn = modalContainer.querySelector('[data-action="close"]');
+          const cancelBtn = modalContainer.querySelector('[data-action="cancel"]');
+          const confirmBtn = modalContainer.querySelector('[data-action="confirm"]');
+          const createNewBtn = modalContainer.querySelector('#create-new-project');
+          
+          // Close modal function
+          function closeModal() {
+            modalContainer.innerHTML = '';
+          }
+          
+          // Set up event listeners
+          closeBtn.addEventListener('click', closeModal);
+          cancelBtn.addEventListener('click', closeModal);
+          
+          // Create new project button
+          createNewBtn.addEventListener('click', async () => {
+            closeModal();
+            await addVideoToNewProject(videoData);
+          });
+          
+          // Confirm button to add to selected project
+          confirmBtn.addEventListener('click', async () => {
+            const select = document.getElementById('project-select');
+            const selectedIndex = select.selectedIndex;
+            
+            if (selectedIndex === -1) {
+              alert('Please select a project');
+              return;
+            }
+            
+            const selectedOption = select.options[selectedIndex];
+            const selectedProjectId = selectedOption.value;
+            
+            console.log('Selected project ID for adding video:', selectedProjectId);
+            console.log('Selected project option:', selectedOption.textContent);
+            
+            if (!selectedProjectId || selectedProjectId === 'undefined' || selectedProjectId === 'null') {
+              alert('The selected project has an invalid ID. Please create a new project instead.');
+              return;
+            }
+            
+            try {
+              // Find the actual project object
+              const project = projects.find(p => p.id === selectedProjectId);
+              
+              if (!project) {
+                throw new Error(`Project with ID ${selectedProjectId} not found in local data`);
+              }
+              
+              console.log('Adding video to project:', project);
+              const updatedProject = await window.api.addVideoToProject(selectedProjectId, videoData);
+              result.textContent = `Video added to project: ${project.name}!\n\n${JSON.stringify(updatedProject, null, 2)}`;
+              
+              // Show the video in the video player
+              if (videoData.videoPath) {
+                currentVideoData = {
+                  originalPath: videoData.videoPath,
+                  verticalPath: videoData.verticalPath || null
+                };
+                showVideoPlayer(videoData.verticalPath || videoData.videoPath);
+              }
+            } catch (error) {
+              result.textContent = `Error adding video to project: ${error.message}`;
+              console.error('Error adding video to project:', error);
+            } finally {
+              closeModal();
+            }
+          });
+        }
+        
+        // Extract audio button
+        document.getElementById('btn-extract-audio').addEventListener('click', async () => {
+          try {
+            // First get all projects to find videos
+            const projects = await window.api.getProjects();
+            
+            // Filter projects with videos
+            const projectsWithVideos = projects.filter(p => p.videoSource && p.videoSource.path);
+            
+            if (projectsWithVideos.length === 0) {
+              result.textContent = 'No projects with videos found. Import a video first.';
+              return;
+            }
+            
+            // Show selection modal for projects
+            let modalContainer = document.getElementById('modal-container');
+            if (!modalContainer) {
+              modalContainer = document.createElement('div');
+              modalContainer.id = 'modal-container';
+              document.body.appendChild(modalContainer);
+            }
+            
+            // Create modal content
+            const modalHTML = `
+              <div class="modal-overlay">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3 class="modal-title">Extract Audio</h3>
+                    <button class="modal-close" data-action="close">✕</button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label class="form-label">Select a video:</label>
+                      <select id="video-select" class="form-input">
+                        ${projectsWithVideos.map(p => 
+                          `<option value="${p.id}" data-path="${p.videoSource.path}">${p.name}: ${p.videoSource.title || 'Video'}</option>`
+                        ).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="modal-button" data-action="cancel">Cancel</button>
+                    <button class="modal-button" data-action="confirm">Extract Audio</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            
+            // Add modal to DOM
+            modalContainer.innerHTML = modalHTML;
+            
+            // Set up event handlers
+            const closeBtn = modalContainer.querySelector('[data-action="close"]');
+            const cancelBtn = modalContainer.querySelector('[data-action="cancel"]');
+            const confirmBtn = modalContainer.querySelector('[data-action="confirm"]');
+            
+            // Close modal function
+            function closeModal() {
+              modalContainer.innerHTML = '';
+            }
+            
+            // Set up event listeners
+            closeBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // Confirm button to extract audio
+            confirmBtn.addEventListener('click', async () => {
+              const select = document.getElementById('video-select');
+              const selectedOption = select.options[select.selectedIndex];
+              const selectedProjectId = selectedOption.value;
+              const videoPath = selectedOption.getAttribute('data-path');
+              
+              if (!videoPath) {
+                alert('No video path found');
+                return;
+              }
+              
+              try {
+                result.textContent = 'Extracting audio... This may take a while.';
+                closeModal();
+                
+                // Extract audio
+                const extractResult = await window.api.extractAudio(videoPath);
+                
+                if (extractResult.success) {
+                  result.textContent = `Audio extracted successfully to: ${extractResult.audioPath}`;
+                  
+                  // Update the project with the audio path
+                  const project = projectsWithVideos.find(p => p.id === selectedProjectId);
+                  if (project) {
+                    project.audioSource = {
+                      path: extractResult.audioPath,
+                      type: 'local'
+                    };
+                    
+                    await window.api.saveProject(project);
+                    result.textContent += '\n\nProject updated with audio source.';
+                  }
+                } else {
+                  result.textContent = `Failed to extract audio: ${extractResult.error}`;
+                }
+              } catch (error) {
+                result.textContent = `Error extracting audio: ${error.message}`;
+              }
+            });
+          } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+          }
+        });
+        
+        // Generate subtitles button
+        document.getElementById('btn-subtitles').addEventListener('click', async () => {
+          try {
+            // First get all projects to find videos
+            const projects = await window.api.getProjects();
+            
+            // Filter projects with videos
+            const projectsWithVideos = projects.filter(p => p.videoSource && p.videoSource.path);
+            
+            if (projectsWithVideos.length === 0) {
+              result.textContent = 'No projects with videos found. Import a video first.';
+              return;
+            }
+            
+            // Show selection modal for projects
+            let modalContainer = document.getElementById('modal-container');
+            if (!modalContainer) {
+              modalContainer = document.createElement('div');
+              modalContainer.id = 'modal-container';
+              document.body.appendChild(modalContainer);
+            }
+            
+            // Create modal content
+            const modalHTML = `
+              <div class="modal-overlay">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3 class="modal-title">Generate Subtitles</h3>
+                    <button class="modal-close" data-action="close">✕</button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label class="form-label">Select a video:</label>
+                      <select id="video-select" class="form-input">
+                        ${projectsWithVideos.map(p => 
+                          `<option value="${p.id}" data-path="${p.videoSource.path}">${p.name}: ${p.videoSource.title || 'Video'}</option>`
+                        ).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button class="modal-button" data-action="cancel">Cancel</button>
+                    <button class="modal-button" data-action="confirm">Generate Subtitles</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            
+            // Add modal to DOM
+            modalContainer.innerHTML = modalHTML;
+            
+            // Set up event handlers
+            const closeBtn = modalContainer.querySelector('[data-action="close"]');
+            const cancelBtn = modalContainer.querySelector('[data-action="cancel"]');
+            const confirmBtn = modalContainer.querySelector('[data-action="confirm"]');
+            
+            // Close modal function
+            function closeModal() {
+              modalContainer.innerHTML = '';
+            }
+            
+            // Set up event listeners
+            closeBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // Confirm button to generate subtitles
+            confirmBtn.addEventListener('click', async () => {
+              const select = document.getElementById('video-select');
+              const selectedOption = select.options[select.selectedIndex];
+              const selectedProjectId = selectedOption.value;
+              const videoPath = selectedOption.getAttribute('data-path');
+              
+              if (!videoPath) {
+                alert('No video path found');
+                return;
+              }
+              
+              try {
+                result.textContent = 'Generating subtitles... This may take a while.';
+                closeModal();
+                
+                // Generate subtitles
+                const subtitles = await window.api.generateSubtitles(videoPath);
+                
+                if (subtitles && subtitles.length > 0) {
+                  result.textContent = `Subtitles generated successfully!\n\nFirst few subtitles:\n${subtitles.slice(0, 5).map(s => 
+                    `${s.startTime}-${s.endTime}: ${s.text}`
+                  ).join('\n')}`;
+                  
+                  // Update the project with the subtitles path
+                  const project = projectsWithVideos.find(p => p.id === selectedProjectId);
+                  if (project) {
+                    // The subtitles file will be in the same directory as the video with .vtt extension
+                    const videoDir = videoPath.substring(0, videoPath.lastIndexOf('/') + 1);
+                    const videoName = videoPath.substring(videoPath.lastIndexOf('/') + 1, videoPath.lastIndexOf('.'));
+                    const subtitlesPath = `${videoDir}${videoName}.vtt`;
+                    
+                    project.subtitlesSource = {
+                      path: subtitlesPath,
+                      type: 'vtt'
+                    };
+                    
+                    await window.api.saveProject(project);
+                    result.textContent += '\n\nProject updated with subtitles source.';
+                  }
+                } else {
+                  result.textContent = 'Failed to generate subtitles. No subtitles were returned.';
+                }
+              } catch (error) {
+                result.textContent = `Error generating subtitles: ${error.message}`;
+              }
+            });
+          } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+          }
+        });
+        
+        // Convert to vertical video
+        document.getElementById('btn-vertical-video').addEventListener('click', async () => {
+          try {
+            // First get all projects to find videos
+            const projects = await window.api.getProjects();
+            
+            // Filter projects with videos
+            const projectsWithVideos = projects.filter(p => p.videoSource && p.videoSource.path);
+            
+            if (projectsWithVideos.length === 0) {
+              result.textContent = 'No projects with videos found. Import a video first.';
+              return;
+            }
+            
+            // Show selection modal for videos to convert
+            let modalContainer = document.getElementById('modal-container');
+            if (!modalContainer) {
+              modalContainer = document.createElement('div');
+              modalContainer.id = 'modal-container';
+              document.body.appendChild(modalContainer);
+            }
+            
+            // Create modal content
+            modalContainer.innerHTML = document.getElementById('video-convert-modal').innerHTML;
+            
+            // Populate video selection
+            const videoSelect = modalContainer.querySelector('#video-select');
+            projectsWithVideos.forEach(project => {
+              const option = document.createElement('option');
+              option.value = project.videoSource.path;
+              option.textContent = `${project.name}: ${project.videoSource.title || 'Video'}`;
+              videoSelect.appendChild(option);
+            });
+            
+            // Process status elements
+            const processingStatus = modalContainer.querySelector('#processing-status');
+            const processingMessage = modalContainer.querySelector('#processing-message');
+            const processingProgress = modalContainer.querySelector('#processing-progress');
+            
+            // Set up event handlers
+            const closeBtn = modalContainer.querySelector('[data-action="close"]');
+            const cancelBtn = modalContainer.querySelector('[data-action="cancel"]');
+            const confirmBtn = modalContainer.querySelector('[data-action="confirm"]');
+            
+            function closeModal() {
+              modalContainer.innerHTML = '';
+            }
+            
+            closeBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // Process video button
+            confirmBtn.addEventListener('click', async () => {
+              const selectedVideoPath = videoSelect.value;
+              
+              if (!selectedVideoPath) {
+                alert('Please select a video');
+                return;
+              }
+              
+              try {
+                // Show processing status
+                processingStatus.style.display = 'block';
+                processingMessage.textContent = 'Processing video to vertical format...';
+                processingProgress.style.width = '10%';
+                
+                // Process the video
+                result.textContent = 'Converting video to vertical format... This may take a while.';
+                
+                const processResult = await window.api.processVideoVertical(selectedVideoPath);
+                
+                if (processResult.success) {
+                  processingProgress.style.width = '100%';
+                  processingMessage.textContent = 'Video processed successfully!';
+                  
+                  // Save the video paths for the player
+                  currentVideoData = {
+                    originalPath: processResult.originalPath,
+                    verticalPath: processResult.verticalPath
+                  };
+                  
+                  // Close modal after a short delay
+                  setTimeout(() => {
+                    closeModal();
+                    
+                    // Show the result
+                    result.textContent = `Video converted to vertical format successfully!\n\nOriginal: ${processResult.originalPath}\nVertical: ${processResult.verticalPath}`;
+                    
+                    // Show the video player with the vertical video
+                    showVideoPlayer(processResult.verticalPath);
+                  }, 1000);
+                } else {
+                  processingProgress.style.width = '100%';
+                  processingProgress.style.backgroundColor = '#ff6b6b';
+                  processingMessage.textContent = `Error: ${processResult.error}`;
+                  result.textContent = `Failed to convert video: ${processResult.error}`;
+                }
+              } catch (error) {
+                processingProgress.style.width = '100%';
+                processingProgress.style.backgroundColor = '#ff6b6b';
+                processingMessage.textContent = `Error: ${error.message}`;
+                result.textContent = `Error processing video: ${error.message}`;
+              }
+            });
+          } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+          }
+        });
+        
+        // Video player buttons
+        document.getElementById('btn-view-original').addEventListener('click', () => {
+          if (currentVideoData.originalPath) {
+            showVideoPlayer(currentVideoData.originalPath);
+          }
+        });
+        
+        document.getElementById('btn-view-vertical').addEventListener('click', () => {
+          if (currentVideoData.verticalPath) {
+            showVideoPlayer(currentVideoData.verticalPath);
+          }
+        });
+        
+        document.getElementById('btn-toggle-subtitles').addEventListener('click', toggleSubtitles);
+        
+        // Setup subtitle style buttons
+        document.querySelectorAll('.style-button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            changeSubtitleStyle(btn.dataset.style);
+          });
+        });
+        
+        // Settings
+        document.getElementById('btn-preferences').addEventListener('click', async () => {
+          try {
+            const prefs = await window.api.getPreferences();
+            result.textContent = JSON.stringify(prefs, null, 2);
+          } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+          }
+        });
+        
+        document.getElementById('btn-theme-toggle').addEventListener('click', async () => {
+          try {
+            const prefs = await window.api.getPreferences();
+            const newTheme = prefs.theme === 'dark' ? 'light' : 'dark';
+            
+            const updatedPrefs = {
+              ...prefs,
+              theme: newTheme
+            };
+            
+            await window.api.savePreferences(updatedPrefs);
+            result.textContent = `Theme changed to: ${newTheme}\n${JSON.stringify(updatedPrefs, null, 2)}`;
+          } catch (error) {
+            result.textContent = `Error: ${error.message}`;
+          }
+        });
+        
+        // Add download with subtitles button event listener
+        document.getElementById('btn-download-with-subtitles').addEventListener('click', async () => {
+          if (!currentVideoData.originalPath && !currentVideoData.verticalPath) {
+            showMessage('No video loaded. Please load a video first.');
+            return;
+          }
+          
+          if (!currentVideoData.subtitlesPath) {
+            showMessage('No subtitles found. Generate subtitles first.');
+            return;
+          }
+          
+          // Create and show a modal for subtitle style selection
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+          modal.innerHTML = `
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 class="modal-title">Download Vertical Video with Subtitles</h3>
+                <span class="modal-close">&times;</span>
+              </div>
+              <div class="modal-body">
+                <p>The vertical version of your video will be downloaded with embedded subtitles.</p>
+                <p>Select a subtitle style to apply to your video:</p>
+                <div class="style-selection">
+                  <label>
+                    <input type="radio" name="subtitle-style" value="default" checked>
+                    Default Style
+                  </label>
+                  <label>
+                    <input type="radio" name="subtitle-style" value="social">
+                    Social Media Style
+                  </label>
+                  <label>
+                    <input type="radio" name="subtitle-style" value="caption">
+                    Caption Style
+                  </label>
+                  <label>
+                    <input type="radio" name="subtitle-style" value="simple">
+                    Simple Style
+                  </label>
+                  <label>
+                    <input type="radio" name="subtitle-style" value="modern">
+                    Modern Style
+                  </label>
+                  <label>
+                    <input type="radio" name="subtitle-style" value="elegant">
+                    Elegant Style
+                  </label>
+                </div>
+                <div class="style-preview">
+                  <div id="style-preview-container" class="default-style">
+                    <span>Preview of selected style</span>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="modal-button" data-action="cancel">Cancel</button>
+                <button class="modal-button" data-action="confirm">Download</button>
+              </div>
+            </div>
+          `;
+          
+          document.body.appendChild(modal);
+          
+          // Add CSS for style preview
+          const stylePreviewCSS = document.createElement('style');
+          stylePreviewCSS.textContent = `
+            .style-selection {
+              margin: 15px 0;
+            }
+            .style-selection label {
+              display: block;
+              margin-bottom: 10px;
+              cursor: pointer;
+            }
+            .style-preview {
+              margin-top: 20px;
+              padding: 15px;
+              background-color: #111;
+              border-radius: 5px;
+            }
+            #style-preview-container {
+              padding: 10px;
+              border-radius: 5px;
+              text-align: center;
+              font-size: 18px;
+            }
+            #style-preview-container.default-style {
+              background-color: rgba(0, 0, 0, 0.5);
+              color: white;
+              text-shadow: 1px 1px 1px black;
+            }
+            #style-preview-container.social-style {
+              background-color: rgba(0, 0, 0, 0.5);
+              color: white;
+              text-shadow: 2px 2px 2px #3F85FF;
+              font-weight: bold;
+              font-size: 20px;
+            }
+            #style-preview-container.caption-style {
+              background-color: rgba(0, 0, 0, 0.75);
+              color: white;
+              text-shadow: 1px 1px 3px black;
+              font-size: 22px;
+            }
+            #style-preview-container.simple-style {
+              color: white;
+              border: 1px solid white;
+            }
+          `;
+          document.head.appendChild(stylePreviewCSS);
+          
+          // Add event listeners for style selection
+          document.querySelectorAll('input[name="subtitle-style"]').forEach(input => {
+            input.addEventListener('change', function() {
+              const stylePreview = document.getElementById('style-preview-container');
+              
+              // Remove all style classes
+              stylePreview.className = '';
+              
+              // Add selected style class
+              stylePreview.classList.add(`${this.value}-style`);
+            });
+          });
+          
+          // Handle modal close button
+          modal.querySelector('.modal-close').addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+          
+          // Handle cancel button
+          modal.querySelector('button[data-action="cancel"]').addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+          
+          // Handle download button
+          modal.querySelector('button[data-action="confirm"]').addEventListener('click', async () => {
+            const selectedStyle = document.querySelector('input[name="subtitle-style"]:checked').value;
+            document.body.removeChild(modal);
+            
+            try {
+              showLoading('Creating video with subtitles...');
+              
+              // Always use vertical path if available, otherwise fall back to original
+              // This ensures we're always using the vertical format for social media platforms
+              const videoSource = currentVideoData.verticalPath || currentVideoData.originalPath;
+              
+              if (!currentVideoData.verticalPath) {
+                showMessage('Warning: Vertical video not available. Using original format instead.', 5000);
+              }
+              
+              const result = await window.api.downloadVideoWithSubtitles(
+                videoSource,
+                currentVideoData.subtitlesPath,
+                null, // Let the backend generate the output path
+                selectedStyle
+              );
+              
+              hideLoading();
+              
+              if (result.success) {
+                // Extract just the filename from the path for cleaner display
+                const filename = result.videoPath.split('/').pop();
+                showMessage(`Vertical video with subtitles created successfully! 
+                  <br><br><strong>Saved to:</strong> Desktop/ytclips/${filename}
+                  <br><br>All videos with subtitles are now saved to the "ytclips" folder on your desktop.`, 6000);
+              } else {
+                showMessage(`Error creating video with subtitles: ${result.error}`);
+              }
+            } catch (error) {
+              hideLoading();
+              showMessage(`Error: ${error.message}`);
+            }
+          });
+        });
+      }
+      
+      // Utility functions for user feedback
+      function showMessage(message, duration = 3000) {
+        // Create message container if it doesn't exist
+        let messageContainer = document.getElementById('message-container');
+        if (!messageContainer) {
+          messageContainer = document.createElement('div');
+          messageContainer.id = 'message-container';
+          messageContainer.style.position = 'fixed';
+          messageContainer.style.bottom = '20px';
+          messageContainer.style.left = '50%';
+          messageContainer.style.transform = 'translateX(-50%)';
+          messageContainer.style.backgroundColor = '#333';
+          messageContainer.style.color = 'white';
+          messageContainer.style.padding = '10px 20px';
+          messageContainer.style.borderRadius = '5px';
+          messageContainer.style.zIndex = '1000';
+          messageContainer.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+          document.body.appendChild(messageContainer);
+        }
+        
+        // Set message and show
+        messageContainer.innerHTML = message;
+        messageContainer.style.display = 'block';
+        
+        // Hide after duration
+        setTimeout(() => {
+          messageContainer.style.display = 'none';
+        }, duration);
+      }
+      
+      function showLoading(message = 'Loading...') {
+        // Create loading container if it doesn't exist
+        let loadingContainer = document.getElementById('loading-container');
+        if (!loadingContainer) {
+          loadingContainer = document.createElement('div');
+          loadingContainer.id = 'loading-container';
+          loadingContainer.style.position = 'fixed';
+          loadingContainer.style.top = '0';
+          loadingContainer.style.left = '0';
+          loadingContainer.style.width = '100%';
+          loadingContainer.style.height = '100%';
+          loadingContainer.style.backgroundColor = 'rgba(0,0,0,0.7)';
+          loadingContainer.style.display = 'flex';
+          loadingContainer.style.justifyContent = 'center';
+          loadingContainer.style.alignItems = 'center';
+          loadingContainer.style.zIndex = '2000';
+          
+          const loadingContent = document.createElement('div');
+          loadingContent.style.backgroundColor = '#333';
+          loadingContent.style.padding = '20px';
+          loadingContent.style.borderRadius = '5px';
+          loadingContent.style.color = 'white';
+          loadingContent.style.textAlign = 'center';
+          
+          const spinner = document.createElement('div');
+          spinner.style.border = '5px solid #f3f3f3';
+          spinner.style.borderTop = '5px solid #3498db';
+          spinner.style.borderRadius = '50%';
+          spinner.style.width = '40px';
+          spinner.style.height = '40px';
+          spinner.style.animation = 'spin 2s linear infinite';
+          spinner.style.margin = '0 auto 10px auto';
+          
+          const style = document.createElement('style');
+          style.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+          document.head.appendChild(style);
+          
+          const messageElement = document.createElement('div');
+          messageElement.id = 'loading-message';
+          
+          loadingContent.appendChild(spinner);
+          loadingContent.appendChild(messageElement);
+          loadingContainer.appendChild(loadingContent);
+          document.body.appendChild(loadingContainer);
+        }
+        
+        // Set message and show
+        document.getElementById('loading-message').textContent = message;
+        loadingContainer.style.display = 'flex';
+      }
+      
+      function hideLoading() {
+        const loadingContainer = document.getElementById('loading-container');
+        if (loadingContainer) {
+          loadingContainer.style.display = 'none';
+        }
+      }
+    });
+  </script>
+</body>
+</html> 
